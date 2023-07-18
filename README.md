@@ -61,6 +61,8 @@ Finally, you can download the file on the url:
 downloader.downloadUrl(url)
 ```
 
+Notification and internet permissions have to be added in the manifest file.
+
 ## License
 ```xml
 Copyright 2022 Mustafa Utku Ensert
