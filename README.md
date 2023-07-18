@@ -5,8 +5,22 @@
 * [License](#license)
 * [Contact](#contact)
 
+## Adding the library
+Clone the project.
+
+Run in the terminal:
+```
+./gradlew build
+```
+Find generated aar file under build folder and copy & paste it into your project. You can create a directory called "libs" under your app module and paste the file into there.
+Then you can add the dependency:
+
+```
+implementation files('libs/Downloader.aar')
+```
+
 ## How to Use
-If you use Hilt in your project, you can initialize Downloader class like below. You should implement a CoroutineScope and inject it.
+If you use Hilt in your project, you can initialize Downloader class like below. You should also implement a CoroutineScope and inject it.
 
 ```kotlin
 @Module
