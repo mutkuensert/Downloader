@@ -51,7 +51,7 @@ private const val DOWNLOADER_NOTIF_CHANNEL_ID: String = "notification_channel_1"
  *
  * @property setFileNameExtractor Set if the name of the file is not between the last slash and the first dot after the last slash.
  *
- * @property setFileFormat Set the file format if it is certain.
+ * @property setFileFormat Set the file format if it is certain. It should be set to null if format extractor is wanted to work.
  *
  * @property notificationBuilder can be edited.
  */
@@ -160,7 +160,7 @@ open class Downloader(private val scope: CoroutineScope, private val context: Co
         notifyIfPermissionIsGranted(notificationId, notificationBuilder.build())
     }
 
-    fun setFileFormat(type: String) {
+    fun setFileFormat(type: String?) {
         fileFormat = type
     }
 

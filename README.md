@@ -68,6 +68,12 @@ downloader.setFileFormatExtractor {
         }
 ```
 
+```kotlin
+downloader.setFileNameExtractor { 
+    it.substringAfterLast("/").substringBefore(".")
+}
+```
+
 You can override onDownloadStart and onDownloadComplete functions by creating a new class inheriting this one.
 
 Finally, you can download the file on the url:
