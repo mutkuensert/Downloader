@@ -7,6 +7,9 @@
 * [License](#license)
 * [Contact](#contact)
 
+## About The Library
+With this library you can easily download the files in urls and show the download progress in notifications.
+
 ## Adding The Dependency
 Add jitpack into the repositories
 
@@ -52,7 +55,7 @@ object DownloaderModule {
     }
 }
 ```
-The notification can be edited:
+The notifications can be edited:
 ```kotlin
 val downloader = Downloader(scope = scope, context = context)
 downloader.notificationBuilder.setAutoCancel(false)
