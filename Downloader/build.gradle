@@ -34,9 +34,9 @@ android {
 publishing {
     publications {
         release(MavenPublication) {
-            groupId = 'com.mutkuensert'
+            groupId = 'com.github.mutkuensert'
             artifactId = 'downloader'
-            version = '1.0.3'
+            version = '1.0.5'
 
             afterEvaluate {
                 from components.release
