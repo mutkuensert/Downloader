@@ -41,7 +41,7 @@ import java.io.FileOutputStream
 import java.io.OutputStream
 
 private const val TAG = "Downloader"
-private const val DOWNLOADER_NOTIF_CHANNEL_ID: String = "notification_channel_1"
+private const val DOWNLOADER_NOTIF_CHANNEL_ID: String = "downloader_notification_channel"
 
 /**
  * @property initActivityResultLauncher Initialize activityResultLauncher
