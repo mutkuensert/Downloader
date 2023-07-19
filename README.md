@@ -10,6 +10,7 @@
 
 ## About The Library
 With this library you can easily download the files in urls and show the download progress in notifications.
+For the example implementation of this library, you can look at my [Pixabay Search Engine](https://github.com/mutkuensert/Pixabay-Search-Engine) project on Github.
 
 ## Adding The Dependency
 Add jitpack into the repositories
@@ -25,9 +26,7 @@ dependencies {
 	}
 ```
 
-For the example implementation, you can look at my [Pixabay Search Engine](https://github.com/mutkuensert/Pixabay-Search-Engine) project on Github.
-
-You can also add the library locally. To do that:
+**You can also add the library locally. To do that:**
 
 Clone the project.
 
@@ -56,7 +55,7 @@ object DownloaderModule {
     }
 }
 ```
-The notifications can be edited:
+The notifications can be customized:
 ```kotlin
 val downloader = Downloader(scope = scope, context = context)
 downloader.notificationBuilder.setAutoCancel(false)
@@ -83,8 +82,8 @@ viewModel.downloader.initActivityResultLauncher {
         }
 ```
 
-The library uses functions of its own to extract the file name and format from the url.
-If a custom extractor is needed different from default ones, you can set different ones:
+The library uses functions of its own to extract the file name and file format from the url.
+If a custom extractor is needed different from these default ones, you must set them:
 ```kotlin
 downloader.setFileFormatExtractor {
             it.substringAfterLast(".").substringBefore("?")
@@ -97,7 +96,7 @@ downloader.setFileNameExtractor {
 }
 ```
 
-You can override onDownloadStart and onDownloadComplete functions by creating a new class inheriting this one.
+You can override onDownloadStart and onDownloadComplete functions by creating a new class inheriting Downloader class.
 
 Finally, you can download the file on the url:
 ```kotlin
