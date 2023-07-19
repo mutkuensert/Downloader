@@ -42,6 +42,7 @@ import java.io.OutputStream
 
 private const val TAG = "Downloader"
 private const val DOWNLOADER_NOTIF_CHANNEL_ID: String = "downloader_notification_channel"
+private const val PROGRESS_MAX = 100
 
 /**
  * @property initActivityResultLauncher Initialize activityResultLauncher
@@ -55,7 +56,11 @@ private const val DOWNLOADER_NOTIF_CHANNEL_ID: String = "downloader_notification
  *
  * @property notificationBuilder can be edited.
  */
-open class Downloader(private val scope: CoroutineScope, private val context: Context) {
+open class Downloader private constructor(
+    private val scope: CoroutineScope,
+    private val context: Context,
+    private var areNotificationsActive: Boolean,
+) {
     private var fileFormat: String? = null
     private var fileFormatExtractor: (url: String) -> String = { it.substringAfterLast(".") }
     private var fileNameExtractor: (url: String) -> String =
@@ -74,12 +79,45 @@ open class Downloader(private val scope: CoroutineScope, private val context: Co
             setAutoCancel(true)
         }
 
-    companion object {
-        private const val PROGRESS_MAX = 100
+    init {
+        createNotificationChannelIfActive()
     }
 
-    init {
-        createNotificationChannel()
+    /**
+     * @property context is mandatory. If not set, NullPointerException will be thrown.
+     *
+     * @property scope is mandatory. If not set, NullPointerException will be thrown
+     */
+    class Builder {
+        private var areNotificationsActive = false
+        private var scope: CoroutineScope? = null
+        private var context: Context? = null
+
+        /**
+         * Default is false.
+         */
+        fun setNotificationsActive(isActive: Boolean): Builder {
+            this.areNotificationsActive = isActive
+            return this
+        }
+
+        fun scope(scope: CoroutineScope): Builder {
+            this.scope = scope
+            return this
+        }
+
+        fun context(context: Context): Builder {
+            this.context = context
+            return this
+        }
+
+        fun build(): Downloader {
+            return Downloader(
+                scope = scope!!,
+                context = context!!,
+                areNotificationsActive = areNotificationsActive
+            )
+        }
     }
 
     private fun createEmptyFileIntentAndStartLauncher(format: String) {
@@ -94,8 +132,8 @@ open class Downloader(private val scope: CoroutineScope, private val context: Co
         startForResult?.launch(intent)
     }
 
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    private fun createNotificationChannelIfActive() {
+        if (areNotificationsActive && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = "Downloader Notification Channel"
             val descriptionText = "Shows download progress."
             val importance =
@@ -134,11 +172,11 @@ open class Downloader(private val scope: CoroutineScope, private val context: Co
     }
 
     @SuppressLint("MissingPermission")
-    private fun notifyIfPermissionIsGranted(
+    private fun notifyIfPermissionIsGrantedAndNotificationsActive(
         id: Int,
         notification: Notification
     ) {
-        if (ActivityCompat.checkSelfPermission(
+        if (areNotificationsActive && ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.POST_NOTIFICATIONS
             ) == PackageManager.PERMISSION_GRANTED
@@ -151,13 +189,19 @@ open class Downloader(private val scope: CoroutineScope, private val context: Co
         notificationBuilder.setContentText("Downloaded File: $currentFileName")
             .setProgress(0, 0, false)
 
-        notifyIfPermissionIsGranted(notificationId, notificationBuilder.build())
+        notifyIfPermissionIsGrantedAndNotificationsActive(
+            notificationId,
+            notificationBuilder.build()
+        )
     }
 
     open fun onDownloadStart() {
         notificationBuilder.setProgress(PROGRESS_MAX, 0, false)
         notificationBuilder.setContentText("Downloading $currentFileName")
-        notifyIfPermissionIsGranted(notificationId, notificationBuilder.build())
+        notifyIfPermissionIsGrantedAndNotificationsActive(
+            notificationId,
+            notificationBuilder.build()
+        )
     }
 
     fun setFileFormat(type: String?) {
@@ -222,7 +266,7 @@ open class Downloader(private val scope: CoroutineScope, private val context: Co
                                     progressCurrent,
                                     false
                                 )
-                                notifyIfPermissionIsGranted(
+                                notifyIfPermissionIsGrantedAndNotificationsActive(
                                     notificationId,
                                     notificationBuilder.build()
                                 )
