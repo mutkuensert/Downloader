@@ -1,5 +1,4 @@
 # Downloader
-=====
 [![](https://jitpack.io/v/mutkuensert/downloader.svg)](https://jitpack.io/#mutkuensert/downloader)
 
 ## Table of Contents
