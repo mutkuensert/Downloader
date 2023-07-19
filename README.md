@@ -1,21 +1,41 @@
 # Downloader
+=====
+[![](https://jitpack.io/v/mutkuensert/downloader.svg)](https://jitpack.io/#mutkuensert/downloader)
 
 ## Table of Contents
+* [Adding The Dependency](#adding-the-dependency)
 * [How to Use](#how-to-use)
 * [License](#license)
 * [Contact](#contact)
 
-## Adding the library
+## Adding The Dependency
+Add jitpack into the repositories
+
+```gradle
+maven { url 'https://jitpack.io' }
+```
+
+Add the dependency in build.gradle file.
+```gradle
+dependencies {
+	        implementation 'com.github.mutkuensert:downloader:v1.0.7'
+	}
+```
+
+For the example implementation, you can look at my [Pixabay Search Engine](https://github.com/mutkuensert/Pixabay-Search-Engine) project on Github.
+
+You can also add the library locally. To do that:
+
 Clone the project.
 
 Run in the terminal:
-```
+```gradle
 ./gradlew build
 ```
 Find generated aar file under build folder and copy & paste it into your project. You can create a directory called "libs" under your app module and paste the file into there.
 Then you can add the dependency:
 
-```
+```gradle
 implementation files('libs/Downloader.aar')
 ```
 
