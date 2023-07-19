@@ -1,5 +1,4 @@
 # Downloader
-[![](https://jitpack.io/v/mutkuensert/downloader.svg)](https://jitpack.io/#mutkuensert/downloader)
 
 ## Table of Contents
 * [About The Library](#about-the-library)
@@ -22,7 +21,7 @@ maven { url 'https://jitpack.io' }
 Add the dependency in build.gradle file.
 ```gradle
 dependencies {
-	        implementation 'com.github.mutkuensert:downloader:v1.0.7'
+	        implementation 'com.github.mutkuensert:downloader:v2.0.0'
 	}
 ```
 
@@ -50,15 +49,26 @@ If you use Hilt in your project, you can initialize Downloader class like below.
 object DownloaderModule {
 
     @Provides
-    fun providesDownloader(scope: CoroutineScope, @ApplicationContext context: Context): Downloader {
-        return Downloader(scope = scope, context = context)
+    fun providesDownloader(scope: AppScope, @ApplicationContext context: Context): Downloader {
+        return Downloader.Builder()
+            .context(context) //Mandatory
+            .scope(scope) //Mandatory
+            .setNotificationsActive(true) //Optional. Default is false.
+            .build()
     }
 }
 ```
 The notifications can be customized:
 ```kotlin
-val downloader = Downloader(scope = scope, context = context)
+val downloader = Downloader.Builder()
+    .context(context)
+    .scope(scope)
+    .setNotificationsActive(true)
+    .build()
+
 downloader.notificationBuilder.setAutoCancel(false)
+
+return downloader
 ```
 
 Inject the downloader somewhere, for example a ViewModel:
