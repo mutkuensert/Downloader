@@ -2,6 +2,7 @@
 [![](https://jitpack.io/v/mutkuensert/downloader.svg)](https://jitpack.io/#mutkuensert/downloader)
 
 ## Table of Contents
+* [About The Library](#about-the-library)
 * [Adding The Dependency](#adding-the-dependency)
 * [How to Use](#how-to-use)
 * [License](#license)
