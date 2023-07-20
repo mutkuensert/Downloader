@@ -36,7 +36,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
+import okhttp3.ResponseBody
 import java.io.FileOutputStream
 import java.io.OutputStream
 
@@ -67,7 +67,7 @@ open class Downloader private constructor(
         { it.substringAfterLast("/").substringBefore(".") }
     private var startForResult: ActivityResultLauncher<Intent>? = null
     private var notificationId: Int = Random(System.nanoTime()).nextInt()
-    private var response: Response? = null
+    private var body: ResponseBody? = null
     private var currentFileName = "file"
 
     val notificationCompat = NotificationManagerCompat.from(context)
@@ -148,21 +148,30 @@ open class Downloader private constructor(
     }
 
     fun downloadUrl(url: String) {
-        Log.i(TAG, "$url is going to be downloaded.")
+        Log.d(TAG, "$url is going to be downloaded.")
 
         scope.launch {
             val request = Request.Builder()
                 .url(url)
                 .build()
-            val client = OkHttpClient()
 
-            response = client.newCall(request).execute()
-            if (response!!.isSuccessful) {
-                val format = fileFormat ?: fileFormatExtractor.invoke(url)
-                currentFileName = fileNameExtractor.invoke(url)
-                createEmptyFileIntentAndStartLauncher(format)
-            } else {
-                Log.e(TAG, "Response is not successful.")
+            val response = OkHttpClient().newCall(request).execute()
+
+            when {
+                response.isSuccessful && response.body != null -> {
+                    body = response.body
+                    val format = fileFormat ?: fileFormatExtractor.invoke(url)
+                    currentFileName = fileNameExtractor.invoke(url)
+                    createEmptyFileIntentAndStartLauncher(format)
+                }
+
+                response.isSuccessful && response.body == null -> {
+                    Log.e(TAG, "Response body is null")
+                }
+
+                else -> {
+                    Log.e(TAG, "Response is not successful.")
+                }
             }
         }
     }
@@ -250,8 +259,8 @@ open class Downloader private constructor(
                         val buff = ByteArray(1024)
                         var read: Int
                         var bytesCopied: Long = 0
-                        val stream = response!!.body!!.byteStream()
-                        val contentLength = response!!.body!!.contentLength()
+                        val stream = body!!.byteStream()
+                        val contentLength = body!!.contentLength()
                         var previousTimeMillis = System.currentTimeMillis()
 
                         while (stream.read(buff, 0, buff.size).also { read = it } > -1) {
@@ -279,7 +288,7 @@ open class Downloader private constructor(
             } catch (error: Throwable) {
                 Log.e(TAG, error.stackTraceToString())
             } finally {
-                response!!.body?.close()
+                body?.close()
                 outputStream?.close()
             }
         }
