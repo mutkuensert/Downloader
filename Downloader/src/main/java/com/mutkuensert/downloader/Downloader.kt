@@ -147,6 +147,7 @@ open class Downloader private constructor(
         }
     }
 
+    @Suppress("KotlinConstantConditions")
     fun downloadUrl(url: String) {
         Log.d(TAG, "$url is going to be downloaded.")
 
@@ -166,11 +167,11 @@ open class Downloader private constructor(
                 }
 
                 response.isSuccessful && response.body == null -> {
-                    Log.e(TAG, "Response body is null")
+                    onNullResponseBody()
                 }
 
-                else -> {
-                    Log.e(TAG, "Response is not successful.")
+                !response.isSuccessful -> {
+                    onUnsuccessfulResponse()
                 }
             }
         }
@@ -211,6 +212,18 @@ open class Downloader private constructor(
             notificationId,
             notificationBuilder.build()
         )
+    }
+
+    open fun onNullResponseBody() {
+        Log.e(TAG, "Response body is null")
+    }
+
+    open fun onUnsuccessfulResponse() {
+        Log.e(TAG, "Response is not successful.")
+    }
+
+    open fun onWriteToFileError(error: Throwable) {
+        Log.e(TAG, error.stackTraceToString())
     }
 
     fun setFileFormat(type: String?) {
@@ -286,7 +299,7 @@ open class Downloader private constructor(
 
                 onDownloadComplete()
             } catch (error: Throwable) {
-                Log.e(TAG, error.stackTraceToString())
+                onWriteToFileError(error)
             } finally {
                 body?.close()
                 outputStream?.close()
