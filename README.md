@@ -20,9 +20,7 @@ maven { url 'https://jitpack.io' }
 
 Add the dependency in build.gradle file.
 ```gradle
-dependencies {
-	        implementation 'com.github.mutkuensert:downloader:v2.0.0'
-	}
+implementation 'com.github.mutkuensert:downloader:v2.0.0'
 ```
 
 **You can also add the library locally. To do that:**
@@ -49,7 +47,7 @@ If you use Hilt in your project, you can initialize Downloader class like below.
 object DownloaderModule {
 
     @Provides
-    fun providesDownloader(scope: AppScope, @ApplicationContext context: Context): Downloader {
+    fun providesDownloader(scope: CoroutineScope, @ApplicationContext context: Context): Downloader {
         return Downloader.Builder()
             .context(context) //Mandatory
             .scope(scope) //Mandatory
