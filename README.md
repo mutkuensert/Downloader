@@ -20,7 +20,7 @@ maven { url 'https://jitpack.io' }
 
 Add the dependency in build.gradle file.
 ```gradle
-implementation 'com.github.mutkuensert:downloader:v2.0.0'
+implementation 'com.github.mutkuensert:downloader:v2.1.0'
 ```
 
 **You can also add the library locally. To do that:**

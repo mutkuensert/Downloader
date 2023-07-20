@@ -36,7 +36,7 @@ publishing {
         release(MavenPublication) {
             groupId = 'com.github.mutkuensert'
             artifactId = 'downloader'
-            version = 'v2.0.0'
+            version = 'v2.1.0'
 
             afterEvaluate {
                 from components.release
