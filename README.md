@@ -93,14 +93,14 @@ viewModel.downloader.initActivityResultLauncher {
 The library uses functions of its own to extract the file name and file format from the url.
 If a custom extractor is needed different from these default ones, you must set them:
 ```kotlin
-downloader.setFileFormatExtractor {
-            it.substringAfterLast(".").substringBefore("?")
+downloader.setFileFormatExtractor { url ->
+            url.substringAfterLast(".").substringBefore("?")
         }
 ```
 
 ```kotlin
-downloader.setFileNameExtractor { 
-    it.substringAfterLast("/").substringBefore(".")
+downloader.setFileNameExtractor { url ->
+    url.substringAfterLast("/").substringBefore(".")
 }
 ```
 
