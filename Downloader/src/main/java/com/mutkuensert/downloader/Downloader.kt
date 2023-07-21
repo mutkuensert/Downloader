@@ -128,7 +128,15 @@ open class Downloader private constructor(
             putExtra(Intent.EXTRA_TITLE, fileName)
         }
 
-        startForResult?.launch(intent)
+        if (startForResult == null) {
+            Log.e(
+                TAG,
+                "Activity Result Launcher is not initialized. " +
+                        "Initialize it via ${this::initActivityResultLauncher.name}"
+            )
+        } else {
+            startForResult!!.launch(intent)
+        }
     }
 
     private fun createNotificationChannelIfActive() {
@@ -148,7 +156,7 @@ open class Downloader private constructor(
 
     @Suppress("KotlinConstantConditions")
     fun downloadUrl(url: String) {
-        Log.d(TAG, "$url is going to be downloaded.")
+        Log.d(TAG, "Url: $url is going to be downloaded.")
 
         scope.launch {
             try {
