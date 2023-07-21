@@ -25,6 +25,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.provider.OpenableColumns
 import android.util.Log
 import android.webkit.MimeTypeMap
 import androidx.activity.result.ActivityResultLauncher
@@ -66,11 +67,9 @@ open class Downloader private constructor(
     private var fileNameExtractor: (url: String) -> String =
         { it.substringAfterLast("/").substringBefore(".") }
     private var startForResult: ActivityResultLauncher<Intent>? = null
-    private var notificationId: Int = Random(System.nanoTime()).nextInt()
     private var body: ResponseBody? = null
-    private var currentFileName = "file"
+    private val notificationCompat = NotificationManagerCompat.from(context)
 
-    val notificationCompat = NotificationManagerCompat.from(context)
     val notificationBuilder =
         NotificationCompat.Builder(context, DOWNLOADER_NOTIF_CHANNEL_ID).apply {
             setContentTitle("Downloader")
@@ -93,11 +92,16 @@ open class Downloader private constructor(
         private var scope: CoroutineScope? = null
         private var context: Context? = null
 
-        /**
-         * Default is false.
-         */
-        fun setNotificationsActive(isActive: Boolean): Builder {
-            this.areNotificationsActive = isActive
+        fun build(): Downloader {
+            return Downloader(
+                scope = scope!!,
+                context = context!!,
+                areNotificationsActive = areNotificationsActive
+            )
+        }
+
+        fun context(context: Context): Builder {
+            this.context = context
             return this
         }
 
@@ -106,27 +110,22 @@ open class Downloader private constructor(
             return this
         }
 
-        fun context(context: Context): Builder {
-            this.context = context
+        /**
+         * Default is false.
+         */
+        fun setNotificationsActive(isActive: Boolean): Builder {
+            this.areNotificationsActive = isActive
             return this
-        }
-
-        fun build(): Downloader {
-            return Downloader(
-                scope = scope!!,
-                context = context!!,
-                areNotificationsActive = areNotificationsActive
-            )
         }
     }
 
-    private fun createEmptyFileIntentAndStartLauncher(format: String) {
+    private fun createEmptyFileIntentAndStartLauncher(format: String, fileName: String) {
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
 
             type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(format)
 
-            putExtra(Intent.EXTRA_TITLE, currentFileName)
+            putExtra(Intent.EXTRA_TITLE, fileName)
         }
 
         startForResult?.launch(intent)
@@ -152,29 +151,55 @@ open class Downloader private constructor(
         Log.d(TAG, "$url is going to be downloaded.")
 
         scope.launch {
-            val request = Request.Builder()
-                .url(url)
-                .build()
+            try {
+                val request = Request.Builder()
+                    .url(url)
+                    .build()
 
-            val response = OkHttpClient().newCall(request).execute()
+                val response = OkHttpClient().newCall(request).execute()
 
-            when {
-                response.isSuccessful && response.body != null -> {
-                    body = response.body
-                    val format = fileFormat ?: fileFormatExtractor.invoke(url)
-                    currentFileName = fileNameExtractor.invoke(url)
-                    createEmptyFileIntentAndStartLauncher(format)
+                when {
+                    response.isSuccessful && response.body != null -> {
+                        body = response.body
+                        val format = fileFormat ?: fileFormatExtractor.invoke(url)
+                        val fileName = fileNameExtractor.invoke(url)
+
+                        createEmptyFileIntentAndStartLauncher(format, fileName)
+                    }
+
+                    response.isSuccessful && response.body == null -> {
+                        onNullResponseBody()
+                    }
+
+                    !response.isSuccessful -> {
+                        onUnsuccessfulResponse()
+                    }
                 }
+            } catch (error: Throwable) {
+                Log.e(TAG, error.stackTraceToString())
+            }
+        }
+    }
 
-                response.isSuccessful && response.body == null -> {
-                    onNullResponseBody()
-                }
+    private fun getFileName(uri: Uri): String {
+        var result: String? = null
 
-                !response.isSuccessful -> {
-                    onUnsuccessfulResponse()
+        if (uri.scheme == "content") {
+            val cursor = context.contentResolver.query(uri, null, null, null, null)
+
+            cursor.use {
+                if (it != null && it.moveToFirst()) {
+                    val columnIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+
+                    if (columnIndex != -1) result = it.getString(columnIndex)
                 }
             }
         }
+
+        if (result == null) {
+            result = uri.path!!.substringAfterLast("/")
+        }
+        return result!!
     }
 
     fun initActivityResultLauncher(activityResultLauncher: Downloader.() -> ActivityResultLauncher<Intent>?) {
@@ -195,8 +220,17 @@ open class Downloader private constructor(
         }
     }
 
-    open fun onDownloadComplete() {
-        notificationBuilder.setContentText("Downloaded File: $currentFileName")
+    open fun onDownloadComplete(notificationId: Int, fileName: String, uri: Uri) {
+        val intent = Intent(
+            Intent.ACTION_VIEW,
+            uri
+        ).apply { addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+        val pendingIntent: PendingIntent =
+            PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+
+        notificationBuilder.setContentIntent(pendingIntent)
+
+        notificationBuilder.setContentText("Downloaded File: $fileName")
             .setProgress(0, 0, false)
 
         notifyIfPermissionIsGrantedAndNotificationsActive(
@@ -205,9 +239,9 @@ open class Downloader private constructor(
         )
     }
 
-    open fun onDownloadStart() {
+    open fun onDownloadStart(notificationId: Int, fileName: String) {
         notificationBuilder.setProgress(PROGRESS_MAX, 0, false)
-        notificationBuilder.setContentText("Downloading $currentFileName")
+        notificationBuilder.setContentText("Downloading $fileName")
         notifyIfPermissionIsGrantedAndNotificationsActive(
             notificationId,
             notificationBuilder.build()
@@ -244,26 +278,14 @@ open class Downloader private constructor(
         fileNameExtractor = extractor
     }
 
-    private fun setNotificationBuilderIntent(uri: Uri) {
-        val intent = Intent(
-            Intent.ACTION_VIEW,
-            uri
-        ).apply { addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) }
-        val pendingIntent: PendingIntent =
-            PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-
-        notificationBuilder.setContentIntent(pendingIntent)
-    }
-
     fun writeToFile(uri: Uri) {
-        setNotificationBuilderIntent(uri)
-
         scope.launch {
             var outputStream: OutputStream? = null
 
             try {
-                notificationId = Random(System.nanoTime()).nextInt()
-                onDownloadStart()
+                val notificationId = Random(System.nanoTime()).nextInt()
+
+                onDownloadStart(notificationId, getFileName(uri))
 
                 context.contentResolver.openFileDescriptor(uri, "wt")
                     ?.use { parcelFileDescriptor ->
@@ -297,7 +319,7 @@ open class Downloader private constructor(
                         }
                     }
 
-                onDownloadComplete()
+                onDownloadComplete(notificationId, getFileName(uri), uri)
             } catch (error: Throwable) {
                 onWriteToFileError(error)
             } finally {
