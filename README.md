@@ -39,7 +39,7 @@ implementation files('libs/Downloader.aar')
 ```
 
 ## How to Use
-If you use Hilt in your project, you can initialize Downloader class like below. You should also implement a CoroutineScope and inject it.
+If you use Hilt in your project, you can initialize Downloader class like below. You should also implement a CoroutineScope and inject it. You mustn't provide it as a singleton.
 
 ```kotlin
 @Module
@@ -82,9 +82,9 @@ Initialize activity result launcher in a Fragment or an Activity:
 viewModel.downloader.initActivityResultLauncher {
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == Activity.RESULT_OK) {
-                    uri = result.data?.data
+                    val uri = result.data?.data
 
-                    if (uri != null) this.writeToFile(uri!!)
+                    if (uri != null) this.writeToFile(uri)
                 }
             }
         }
