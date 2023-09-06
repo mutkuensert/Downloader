@@ -82,32 +82,18 @@ open class Downloader private constructor(
         createNotificationChannelIfActive()
     }
 
-    /**
-     * @property context is mandatory. If not set, NullPointerException will be thrown.
-     *
-     * @property scope is mandatory. If not set, NullPointerException will be thrown
-     */
-    class Builder {
+    class Builder(
+        private val context: Context,
+        private val scope: CoroutineScope
+    ) {
         private var areNotificationsActive = false
-        private var scope: CoroutineScope? = null
-        private var context: Context? = null
 
         fun build(): Downloader {
             return Downloader(
-                scope = scope!!,
-                context = context!!,
+                scope = scope,
+                context = context,
                 areNotificationsActive = areNotificationsActive
             )
-        }
-
-        fun context(context: Context): Builder {
-            this.context = context
-            return this
-        }
-
-        fun scope(scope: CoroutineScope): Builder {
-            this.scope = scope
-            return this
         }
 
         /**
