@@ -48,10 +48,8 @@ object DownloaderModule {
 
     @Provides
     fun providesDownloader(scope: CoroutineScope, @ApplicationContext context: Context): Downloader {
-        return Downloader.Builder()
-            .context(context) //Mandatory
-            .scope(scope) //Mandatory
-            .setNotificationsActive(true) //Optional. Default is false.
+        return Downloader.Builder(context, scope)
+            .setNotificationsActive(true) //Default is false.
             .build()
     }
 }
